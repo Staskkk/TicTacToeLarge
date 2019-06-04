@@ -24,6 +24,8 @@ namespace Tic_tac_toe.Models
 
         public int? HeurValue { get; set; }
 
+        public int DisplayHeurValue { get; set; }
+
         public Move Move { get; } = null;
 
         public byte this[int i, int j]

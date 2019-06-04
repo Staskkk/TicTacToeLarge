@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -25,15 +26,14 @@ namespace Tic_tac_toe
         public MainWindow()
         {
             this.InitializeComponent();
-            GlobalCells = this.Cells;
             Cells.PlayerMoved += this.Cells_PlayerMoved;
             this.gameManager.StateChanged += this.GameManager_StateChanged;
             this.gameManager.GameOver += this.GameManager_GameOver;
         }
 
-        public static Cells GlobalCells { get; set; }
+        public static AutoResetEvent WaitEvent { get; set; } = new AutoResetEvent(false);
 
-        private void Cells_PlayerMoved(object sender, Move move)
+        private async void Cells_PlayerMoved(object sender, Move move)
         {
             if (!this.gameManager.GameStarted && !RadioPlayerFirst.IsChecked.Value)
             {
@@ -42,15 +42,22 @@ namespace Tic_tac_toe
 
             if (!this.gameManager.GameStarted)
             {
-                this.Start();
+                await this.Start();
             }
 
-            this.gameManager.PlayerMakeMove(move);
+            await Task.Run(() =>
+            {
+                this.gameManager.PlayerMakeMove(move);
+            });
         }
 
         private void GameManager_StateChanged(object sender, RootState state)
         {
-            Cells.State = state;
+            Application.Current.Dispatcher.Invoke(new Action(() =>
+            {
+                Cells.State = state;
+                TextBoxHeur.Text = state.DisplayHeurValue.ToString();
+            }));
         }
 
         private void GameManager_GameOver(object sender, string message)
@@ -59,7 +66,7 @@ namespace Tic_tac_toe
             this.Finish();
         }
 
-        private void Start()
+        private async Task Start()
         {
             TextBoxDepth.IsEnabled = false;
             ButtonStart.IsEnabled = false;
@@ -71,8 +78,14 @@ namespace Tic_tac_toe
 
             Cells.PlayerSymbol = RadioPlayerX.IsChecked.Value ? "X" : "O";
             Cells.ComputerSymbol = RadioPlayerO.IsChecked.Value ? "X" : "O";
-            this.gameManager.Start(Convert.ToInt32(TextBoxDepth.Text), RadioPlayerFirst.IsChecked.Value);
-            this.gameManager.ComputerMakeMove();
+
+            int depth = Convert.ToInt32(TextBoxDepth.Text);
+            bool isPlayerFirst = RadioPlayerFirst.IsChecked.Value;
+            await Task.Run(() =>
+            {
+                this.gameManager.Start(depth, isPlayerFirst);
+                this.gameManager.ComputerMakeMove();
+            });
         }
 
         private void Finish()
@@ -88,9 +101,9 @@ namespace Tic_tac_toe
             this.gameManager.Finish();
         }
 
-        private void ButtonStart_Click(object sender, RoutedEventArgs e)
+        private async void ButtonStart_Click(object sender, RoutedEventArgs e)
         {
-            this.Start();
+            await this.Start();
         }
 
         private void ButtonStop_Click(object sender, RoutedEventArgs e)
@@ -106,6 +119,11 @@ namespace Tic_tac_toe
         private void RadioComputerFirst_Checked(object sender, RoutedEventArgs e)
         {
             this.ButtonStart.IsEnabled = true;
+        }
+
+        private void ButtonNext_Click(object sender, RoutedEventArgs e)
+        {
+            WaitEvent.Set();
         }
     }
 }

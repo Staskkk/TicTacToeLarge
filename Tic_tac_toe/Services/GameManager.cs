@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Tic_tac_toe.Helpers;
 using Tic_tac_toe.Models;
 
 namespace Tic_tac_toe.Services
@@ -33,6 +32,13 @@ namespace Tic_tac_toe.Services
         public event EventHandler<RootState> StateChanged;
 
         public event EventHandler<string> GameOver;
+
+        private enum RowOpenClose
+        {
+            Unknown,
+            Open,
+            Close
+        }
 
         public static GameManager Instance { get; } = new GameManager();
 
@@ -323,7 +329,7 @@ namespace Tic_tac_toe.Services
                         foreach (var nextLayerState in currLayerState.NextStates)
                         {
                             this.currentState[nextLayerState.Move.I, nextLayerState.Move.J] = nextLayerState.Move.MoveMark;
-                            nextLayerState.HeurValue = nextLayerState.HeurValue ?? HeuristicManager.Heuristic(this.currentState, goodMark, badMark);
+                            nextLayerState.HeurValue = nextLayerState.HeurValue ?? this.Heuristic(goodMark, badMark);
                             this.currentState[nextLayerState.Move.I, nextLayerState.Move.J] = EmptyMark;
 
                             if (IsMinMaxFound(currDepth + 1, nextLayerState.HeurValue.Value, currLayerState.HeurValue))
@@ -345,7 +351,7 @@ namespace Tic_tac_toe.Services
                     }
                     else
                     {
-                        currLayerState.HeurValue = HeuristicManager.Heuristic(this.currentState, goodMark, badMark);
+                        currLayerState.HeurValue = this.Heuristic(goodMark, badMark);
                         if (IsMinMaxFound(currDepth, currLayerState.HeurValue.Value, currLayerHeurValue))
                         {
                             currLayerHeurValue = currLayerState.HeurValue;
@@ -494,5 +500,105 @@ namespace Tic_tac_toe.Services
 
             return false;
         }
+
+        #region Heuristic
+
+        private int Heuristic(byte goodMark, byte badMark)
+        {
+            int globalSum = 0;
+            for (int i = 0; i < FieldSize; ++i)
+            {
+                for (int j = 0; j < FieldSize; ++j)
+                {
+                    if (this.currentState[i, j] == goodMark)
+                    {
+                        var singleHeuristic = this.SingleHeuristic(i, j, goodMark);
+                        globalSum += singleHeuristic;
+                    }
+                    else if (this.currentState[i, j] == badMark)
+                    {
+                        var singleHeuristic = this.SingleHeuristic(i, j, badMark);
+                        globalSum -= singleHeuristic;
+                    }
+                }
+            }
+
+            this.currentState.DisplayHeurValue = globalSum;
+            this.StateChanged?.Invoke(this, this.currentState);
+            MainWindow.WaitEvent.WaitOne();
+            return globalSum;
+        }
+
+        private int SingleHeuristic(int i0, int j0, byte goodMark)
+        {
+            int[] sums = new int[4] { 1, 1, 1, 1 };
+            RowOpenClose[] ends = new RowOpenClose[8];
+            for (int i = 1; i < 6; ++i)
+            {
+                this.CheckCellInRow(goodMark, i0 + i, j0, 0, 0, sums, ends);
+                this.CheckCellInRow(goodMark, i0 - i, j0, 0, 1, sums, ends);
+                this.CheckCellInRow(goodMark, i0, j0 + i, 1, 2, sums, ends);
+                this.CheckCellInRow(goodMark, i0, j0 - i, 1, 3, sums, ends);
+                this.CheckCellInRow(goodMark, i0 + i, j0 + i, 2, 4, sums, ends);
+                this.CheckCellInRow(goodMark, i0 - i, j0 - i, 2, 5, sums, ends);
+                this.CheckCellInRow(goodMark, i0 + i, j0 - i, 3, 6, sums, ends);
+                this.CheckCellInRow(goodMark, i0 - i, j0 + i, 3, 7, sums, ends);
+            }
+
+            int globalSum = 0;
+            for (int i = 0; i < sums.Length; ++i)
+            {
+                if (sums[i] >= 5)
+                {
+                    return int.MaxValue;
+                }
+
+                globalSum += sums[i] * this.GetWeightedSum(sums[i], ends[i * 2], ends[(i * 2) + 1]);
+            }
+
+            return globalSum;
+        }
+
+        private int GetWeightedSum(int sum, RowOpenClose end1, RowOpenClose end2)
+        {
+            if (end1 == RowOpenClose.Close && end2 == RowOpenClose.Close)
+            {
+                return sum;
+            }
+            else if (end1 == RowOpenClose.Close || end2 == RowOpenClose.Close)
+            {
+                return sum * 2;
+            }
+            else
+            {
+                return sum * 3;
+            }
+        }
+
+        private void CheckCellInRow(int goodMark, int i, int j, int sumI, int endI, int[] sums, RowOpenClose[] ends)
+        {
+            if (ends[endI] != RowOpenClose.Unknown)
+            {
+                return;
+            }
+
+            if (this.currentState[i, j] == goodMark)
+            {
+                sums[sumI]++;
+            }
+            else
+            {
+                if (this.currentState[i, j] == GameManager.EmptyMark)
+                {
+                    ends[endI] = RowOpenClose.Open;
+                }
+                else
+                {
+                    ends[endI] = RowOpenClose.Close;
+                }
+            }
+        }
+
+        #endregion
     }
 }
