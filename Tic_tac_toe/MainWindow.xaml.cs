@@ -62,8 +62,11 @@ namespace Tic_tac_toe
 
         private void GameManager_GameOver(object sender, string message)
         {
-            MessageBox.Show(message);
-            this.Finish();
+            Application.Current.Dispatcher.Invoke(new Action(() =>
+            {
+                MessageBox.Show(message);
+                this.Finish();
+            }));
         }
 
         private async Task Start()

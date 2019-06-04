@@ -13,17 +13,17 @@ namespace Tic_tac_toe.Services
 
         public const int FieldOffset = 5;
 
-        public const int WallMark = 0;
+        public const byte WallMark = 0;
 
-        public const int EmptyMark = 1;
+        public const byte EmptyMark = 1;
 
-        public const int PlayerMark = 2;
+        public const byte PlayerMark = 2;
 
-        public const int ComputerMark = 3;
-
-        ////private static Random rand = new Random();
+        public const byte ComputerMark = 3;
 
         private RootState currentState = new RootState();
+
+        private byte playerStartedMark;
 
         private GameManager()
         {
@@ -44,7 +44,7 @@ namespace Tic_tac_toe.Services
 
         public bool GameStarted { get; private set; } = false;
 
-        public bool PlayerTurn { get; private set; } = true;
+        public bool PlayerTurn { get; private set; }
 
         public int GlobalDepth { get; private set; } = 2;
 
@@ -71,6 +71,7 @@ namespace Tic_tac_toe.Services
 
             this.GlobalDepth = depth;
             this.PlayerTurn = playerTurn;
+            this.playerStartedMark = playerTurn ? PlayerMark : ComputerMark;
             this.GameStarted = true;
         }
 
@@ -159,11 +160,6 @@ namespace Tic_tac_toe.Services
 
             return depth % 2 == 0 ? newVal >= oldVal : newVal <= oldVal;
         }
-
-        ////private static int Heuristic(IState state, byte goodMark, byte badMark)
-        ////{
-        ////    return rand.Next(-100, 101);
-        ////}
 
         private bool IsAllOccupied()
         {
@@ -523,9 +519,9 @@ namespace Tic_tac_toe.Services
                 }
             }
 
-            this.currentState.DisplayHeurValue = globalSum;
-            this.StateChanged?.Invoke(this, this.currentState);
-            MainWindow.WaitEvent.WaitOne();
+            ////this.currentState.DisplayHeurValue = globalSum;
+            ////this.StateChanged?.Invoke(this, this.currentState);
+            ////MainWindow.WaitEvent.WaitOne();
             return globalSum;
         }
 
@@ -550,29 +546,37 @@ namespace Tic_tac_toe.Services
             {
                 if (sums[i] >= 5)
                 {
-                    return int.MaxValue;
+                    return int.MaxValue / 1000;
                 }
-
-                globalSum += sums[i] * this.GetWeightedSum(sums[i], ends[i * 2], ends[(i * 2) + 1]);
+                
+                globalSum += sums[i] * this.GetWeightedSum(goodMark, sums[i], ends[i * 2], ends[(i * 2) + 1]);
             }
 
             return globalSum;
         }
 
-        private int GetWeightedSum(int sum, RowOpenClose end1, RowOpenClose end2)
+        private int GetWeightedSum(byte goodMark, int sum, RowOpenClose end1, RowOpenClose end2)
         {
+            int weightedSum = sum;
             if (end1 == RowOpenClose.Close && end2 == RowOpenClose.Close)
             {
-                return sum;
+                weightedSum *= 1;
             }
             else if (end1 == RowOpenClose.Close || end2 == RowOpenClose.Close)
             {
-                return sum * 2;
+                weightedSum *= 10;
             }
             else
             {
-                return sum * 3;
+                weightedSum *= 100;
             }
+
+            if (this.playerStartedMark == goodMark)
+            {
+                weightedSum *= 1000;
+            }
+
+            return weightedSum;
         }
 
         private void CheckCellInRow(int goodMark, int i, int j, int sumI, int endI, int[] sums, RowOpenClose[] ends)
