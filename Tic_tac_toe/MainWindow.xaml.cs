@@ -25,10 +25,13 @@ namespace Tic_tac_toe
         public MainWindow()
         {
             this.InitializeComponent();
+            GlobalCells = this.Cells;
             Cells.PlayerMoved += this.Cells_PlayerMoved;
             this.gameManager.StateChanged += this.GameManager_StateChanged;
             this.gameManager.GameOver += this.GameManager_GameOver;
         }
+
+        public static Cells GlobalCells { get; set; }
 
         private void Cells_PlayerMoved(object sender, Move move)
         {

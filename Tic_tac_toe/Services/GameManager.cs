@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Tic_tac_toe.Helpers;
 using Tic_tac_toe.Models;
 
 namespace Tic_tac_toe.Services
@@ -21,7 +22,7 @@ namespace Tic_tac_toe.Services
 
         public const int ComputerMark = 3;
 
-        private static Random rand = new Random();
+        ////private static Random rand = new Random();
 
         private RootState currentState = new RootState();
 
@@ -153,10 +154,10 @@ namespace Tic_tac_toe.Services
             return depth % 2 == 0 ? newVal >= oldVal : newVal <= oldVal;
         }
 
-        private static int Heuristic(IState state, byte goodMark, byte badMark)
-        {
-            return rand.Next(-100, 101);
-        }
+        ////private static int Heuristic(IState state, byte goodMark, byte badMark)
+        ////{
+        ////    return rand.Next(-100, 101);
+        ////}
 
         private bool IsAllOccupied()
         {
@@ -322,7 +323,7 @@ namespace Tic_tac_toe.Services
                         foreach (var nextLayerState in currLayerState.NextStates)
                         {
                             this.currentState[nextLayerState.Move.I, nextLayerState.Move.J] = nextLayerState.Move.MoveMark;
-                            nextLayerState.HeurValue = nextLayerState.HeurValue ?? Heuristic(nextLayerState, goodMark, badMark);
+                            nextLayerState.HeurValue = nextLayerState.HeurValue ?? HeuristicManager.Heuristic(this.currentState, goodMark, badMark);
                             this.currentState[nextLayerState.Move.I, nextLayerState.Move.J] = EmptyMark;
 
                             if (IsMinMaxFound(currDepth + 1, nextLayerState.HeurValue.Value, currLayerState.HeurValue))
@@ -344,7 +345,7 @@ namespace Tic_tac_toe.Services
                     }
                     else
                     {
-                        currLayerState.HeurValue = Heuristic(currLayerState, goodMark, badMark);
+                        currLayerState.HeurValue = HeuristicManager.Heuristic(this.currentState, goodMark, badMark);
                         if (IsMinMaxFound(currDepth, currLayerState.HeurValue.Value, currLayerHeurValue))
                         {
                             currLayerHeurValue = currLayerState.HeurValue;

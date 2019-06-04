@@ -58,7 +58,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Helpers\PatternHashes.cs" />
+    <Compile Include="Helpers\HeuristicManager.cs" />
     <Compile Include="Models\IState.cs" />
     <Compile Include="Models\Move.cs" />
     <Compile Include="Models\RootState.cs" />
