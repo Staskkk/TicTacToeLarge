@@ -33,39 +33,6 @@ namespace Tic_tac_toe
         public Cells()
         {
             this.InitializeComponent();
-            this.cells = new TextBox[this.FieldSize, this.FieldSize];
-            int marginTop = 0;
-            for (int i = 0; i < this.FieldSize; ++i)
-            {
-                int marginLeft = 0;
-                for (int j = 0; j < this.FieldSize; ++j)
-                {
-                    this.cells[i, j] = new TextBox
-                    {
-                        FontSize = this.TextFontSize,
-                        Width = this.CellSize,
-                        Height = this.CellSize,
-                        Margin = new Thickness
-                        {
-                            Top = marginTop,
-                            Left = marginLeft
-                        },
-                        IsReadOnly = true,
-                        BorderBrush = Brushes.Gray,
-                        BorderThickness = new Thickness(2),
-                        HorizontalAlignment = HorizontalAlignment.Left,
-                        VerticalAlignment = VerticalAlignment.Top,
-                        MaxLength = 2,
-                        TextWrapping = TextWrapping.Wrap,
-                        TextAlignment = TextAlignment.Center
-                    };
-                    this.cells[i, j].GotFocus += this.N_GotFocus;
-                    this.GridMain.Children.Add(this.cells[i, j]);
-                    marginLeft += this.CellSize;
-                }
-
-                marginTop += this.CellSize;
-            }
         }
 
         public event EventHandler<Move> PlayerMoved;
@@ -78,8 +45,16 @@ namespace Tic_tac_toe
 
         public int FieldSize
         {
-            get { return (int)GetValue(FieldSizeProperty); }
-            set { this.SetValue(FieldSizeProperty, value); }
+            get
+            {
+                return (int)GetValue(FieldSizeProperty);
+            }
+
+            set
+            {
+                this.SetFieldSize(value);
+                this.SetValue(FieldSizeProperty, value);
+            }
         }
 
         public int TextFontSize
@@ -96,7 +71,7 @@ namespace Tic_tac_toe
         {
             get
             {
-                var state = new RootState();
+                var state = new RootState(this.FieldSize);
                 for (int i = 0; i < this.FieldSize; ++i)
                 {
                     for (int j = 0; j < this.FieldSize; ++j)
@@ -139,6 +114,59 @@ namespace Tic_tac_toe
                         }
                     }
                 }
+            }
+        }
+
+        private void SetFieldSize(int fieldSize)
+        {
+            if (this.FieldSize == fieldSize && this.cells != null)
+            {
+                return;
+            }
+
+            if (this.cells != null)
+            {
+                for (int i = 0; i < this.FieldSize; ++i)
+                {
+                    for (int j = 0; j < this.FieldSize; ++j)
+                    {
+                        this.GridMain.Children.Remove(this.cells[i, j]);
+                    }
+                }
+            }
+
+            this.cells = new TextBox[fieldSize, fieldSize];
+            int marginTop = 0;
+            for (int i = 0; i < fieldSize; ++i)
+            {
+                int marginLeft = 0;
+                for (int j = 0; j < fieldSize; ++j)
+                {
+                    this.cells[i, j] = new TextBox
+                    {
+                        FontSize = this.TextFontSize,
+                        Width = this.CellSize,
+                        Height = this.CellSize,
+                        Margin = new Thickness
+                        {
+                            Top = marginTop,
+                            Left = marginLeft
+                        },
+                        IsReadOnly = true,
+                        BorderBrush = Brushes.Gray,
+                        BorderThickness = new Thickness(2),
+                        HorizontalAlignment = HorizontalAlignment.Left,
+                        VerticalAlignment = VerticalAlignment.Top,
+                        MaxLength = 2,
+                        TextWrapping = TextWrapping.Wrap,
+                        TextAlignment = TextAlignment.Center
+                    };
+                    this.cells[i, j].GotFocus += this.N_GotFocus;
+                    this.GridMain.Children.Add(this.cells[i, j]);
+                    marginLeft += this.CellSize;
+                }
+
+                marginTop += this.CellSize;
             }
         }
 

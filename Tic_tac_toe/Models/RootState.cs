@@ -11,9 +11,9 @@ namespace Tic_tac_toe.Models
     {
         private byte[,] arr;
 
-        public RootState()
+        public RootState(int fieldSize)
         {
-            this.SetEmpty();
+            this.SetEmpty(fieldSize);
         }
 
         public IState Prev { get; } = null;
@@ -41,9 +41,9 @@ namespace Tic_tac_toe.Models
             }
         }
 
-        public void SetEmpty()
+        public void SetEmpty(int fieldSize)
         {
-            this.arr = new byte[GameManager.FieldSize + (2 * GameManager.FieldOffset), GameManager.FieldSize + (2 * GameManager.FieldOffset)];
+            this.arr = new byte[fieldSize + (2 * GameManager.FieldOffset), fieldSize + (2 * GameManager.FieldOffset)];
             for (int i = 0; i < this.arr.GetLength(0); ++i)
             {
                 for (int j = 0; j < this.arr.GetLength(1); ++j)
@@ -52,9 +52,9 @@ namespace Tic_tac_toe.Models
                 }
             }
 
-            for (int i = GameManager.FieldOffset; i < GameManager.FieldSize + GameManager.FieldOffset; ++i)
+            for (int i = GameManager.FieldOffset; i < fieldSize + GameManager.FieldOffset; ++i)
             {
-                for (int j = GameManager.FieldOffset; j < GameManager.FieldSize + GameManager.FieldOffset; ++j)
+                for (int j = GameManager.FieldOffset; j < fieldSize + GameManager.FieldOffset; ++j)
                 {
                     this.arr[i, j] = GameManager.EmptyMark;
                 }

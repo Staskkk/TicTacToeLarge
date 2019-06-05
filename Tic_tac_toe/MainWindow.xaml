@@ -5,22 +5,24 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Tic_tac_toe"
         mc:Ignorable="d"
-        Title="Tic-tac-toe" Height="763.866" Width="654.909" ResizeMode="NoResize"
+        Title="Tic-tac-toe" Height="759.966" Width="1227.309" ResizeMode="NoResize"
         FontSize="18">
     <Grid>
-        <local:Cells x:Name="Cells" FieldSize="10" CellSize="32" TextFontSize="20" HorizontalAlignment="Center" Margin="0,40,0,0"/>
-        <Button Name="ButtonStart" Content="Start" IsEnabled="False" HorizontalAlignment="Left" Margin="293,632,0,0" VerticalAlignment="Top" Width="187" Height="40" FontSize="24" Click="ButtonStart_Click"/>
-        <GroupBox Header="First step" HorizontalAlignment="Left" Height="79" Margin="155,545,0,0" VerticalAlignment="Top" Width="97"/>
-        <RadioButton Padding="0,-5,0,5" Checked="RadioPlayerFirst_Checked" GroupName="1" Name="RadioPlayerFirst" IsChecked="True" Content="Player" HorizontalAlignment="Left" Margin="165,578,0,0" VerticalAlignment="Top"/>
-        <RadioButton Padding="0,-5,0,5" Checked="RadioComputerFirst_Checked" GroupName="1" Name="RadioComputerFirst" IsChecked="False" Content="II" HorizontalAlignment="Left" Margin="165,598,0,0" VerticalAlignment="Top"/>
-        <GroupBox Header="Sign to play" HorizontalAlignment="Left" Height="77" Margin="355,545,0,0" VerticalAlignment="Top" Width="130"/>
-        <RadioButton Padding="0,-5,0,5" GroupName="2" x:Name="RadioPlayerX" IsChecked="True" Content="X" HorizontalAlignment="Left" Margin="365,598,0,0" VerticalAlignment="Top"/>
-        <RadioButton Padding="0,-5,0,5" GroupName="2" x:Name="RadioPlayerO" IsChecked="False" Content="O" HorizontalAlignment="Left" Margin="365,578,0,0" VerticalAlignment="Top"/>
-        <Button x:Name="ButtonStop" IsEnabled="False" Content="Stop" HorizontalAlignment="Left" Margin="293,677,0,0" VerticalAlignment="Top" Width="187" Height="40" FontSize="24" Click="ButtonStop_Click"/>
-        <Label Content="Depth:" HorizontalAlignment="Left" Margin="158,653,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="TextBoxDepth" HorizontalAlignment="Left" Height="30" Margin="221,657,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="49"/>
-        <TextBox x:Name="TextBoxHeur" IsReadOnly="True" HorizontalAlignment="Left" Height="30" Margin="252,380,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="232"/>
-        <Button x:Name="ButtonNext" Content="Next" HorizontalAlignment="Left" Margin="165,415,0,0" VerticalAlignment="Top" Width="105" Height="40" FontSize="24" Click="ButtonNext_Click"/>
-        <Label Content="Heuristic:" HorizontalAlignment="Left" Margin="164,376,0,0" VerticalAlignment="Top"/>
+        <local:Cells x:Name="Cells" FieldSize="10" CellSize="32" TextFontSize="20" HorizontalAlignment="Right" Margin="0,20,9.6,10.4" Width="700" Height="700"/>
+        <Button Name="ButtonStart" Content="Start" IsEnabled="False" HorizontalAlignment="Left" Margin="145,151,0,0" VerticalAlignment="Top" Width="187" Height="40" FontSize="24" Click="ButtonStart_Click"/>
+        <GroupBox Header="First step" HorizontalAlignment="Left" Height="79" Margin="7,64,0,0" VerticalAlignment="Top" Width="97"/>
+        <RadioButton Padding="0,-5,0,5" Checked="RadioPlayerFirst_Checked" GroupName="1" Name="RadioPlayerFirst" IsChecked="True" Content="Player" HorizontalAlignment="Left" Margin="17,97,0,0" VerticalAlignment="Top"/>
+        <RadioButton Padding="0,-5,0,5" Checked="RadioComputerFirst_Checked" GroupName="1" Name="RadioComputerFirst" IsChecked="False" Content="II" HorizontalAlignment="Left" Margin="17,117,0,0" VerticalAlignment="Top"/>
+        <GroupBox Header="Sign to play" HorizontalAlignment="Left" Height="77" Margin="207,64,0,0" VerticalAlignment="Top" Width="130"/>
+        <RadioButton Padding="0,-5,0,5" GroupName="2" x:Name="RadioPlayerX" IsChecked="True" Content="X" HorizontalAlignment="Left" Margin="217,117,0,0" VerticalAlignment="Top"/>
+        <RadioButton Padding="0,-5,0,5" GroupName="2" x:Name="RadioPlayerO" IsChecked="False" Content="O" HorizontalAlignment="Left" Margin="217,97,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="ButtonStop" IsEnabled="False" Content="Stop" HorizontalAlignment="Left" Margin="145,196,0,0" VerticalAlignment="Top" Width="187" Height="40" FontSize="24" Click="ButtonStop_Click"/>
+        <Label Content="Depth:" HorizontalAlignment="Left" Margin="10,172,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="TextBoxDepth" HorizontalAlignment="Left" Height="30" Margin="73,176,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="49"/>
+        <TextBox x:Name="TextBoxHeur" IsReadOnly="True" HorizontalAlignment="Left" Height="30" Margin="105,241,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="232"/>
+        <Button x:Name="ButtonNext" Visibility="Hidden" Content="Next" HorizontalAlignment="Left" Margin="165,415,0,0" VerticalAlignment="Top" Width="105" Height="40" FontSize="24" Click="ButtonNext_Click"/>
+        <Label Content="Heuristic:" HorizontalAlignment="Left" Margin="17,237,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="TextBoxFieldSize" Text="20" HorizontalAlignment="Left" Height="30" Margin="101,29,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="232" TextChanged="TextBoxFieldSize_TextChanged"/>
+        <Label Content="Field size:" HorizontalAlignment="Left" Margin="10,25,0,0" VerticalAlignment="Top"/>
     </Grid>
 </Window>

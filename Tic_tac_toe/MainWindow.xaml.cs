@@ -56,8 +56,11 @@ namespace Tic_tac_toe
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
                 Cells.State = state;
-                TextBoxHeur.Text = state.HeurValue.ToString();
+                TextBoxHeur.Text = state.HeurValue?.ToString();
+                ////TextBoxHeur.Text = state.DisplayHeurValue.ToString();
             }));
+            ////Thread.Sleep(500);
+            ////WaitEvent.Set();
         }
 
         private void GameManager_GameOver(object sender, string message)
@@ -72,6 +75,7 @@ namespace Tic_tac_toe
         private async Task Start()
         {
             TextBoxDepth.IsEnabled = false;
+            TextBoxFieldSize.IsEnabled = false;
             ButtonStart.IsEnabled = false;
             RadioPlayerFirst.IsEnabled = false;
             RadioComputerFirst.IsEnabled = false;
@@ -84,9 +88,10 @@ namespace Tic_tac_toe
 
             int depth = Convert.ToInt32(TextBoxDepth.Text);
             bool isPlayerFirst = RadioPlayerFirst.IsChecked.Value;
+            int fieldSize = Convert.ToInt32(TextBoxFieldSize.Text);
             await Task.Run(() =>
             {
-                this.gameManager.Start(depth, isPlayerFirst);
+                this.gameManager.Start(depth, isPlayerFirst, fieldSize);
                 this.gameManager.ComputerMakeMove();
             });
         }
@@ -94,6 +99,7 @@ namespace Tic_tac_toe
         private void Finish()
         {
             TextBoxDepth.IsEnabled = true;
+            TextBoxFieldSize.IsEnabled = true;
             RadioPlayerFirst.IsEnabled = true;
             RadioComputerFirst.IsEnabled = true;
             RadioPlayerO.IsEnabled = true;
@@ -127,6 +133,11 @@ namespace Tic_tac_toe
         private void ButtonNext_Click(object sender, RoutedEventArgs e)
         {
             WaitEvent.Set();
+        }
+
+        private void TextBoxFieldSize_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            Cells.FieldSize = Convert.ToInt32(TextBoxFieldSize.Text);
         }
     }
 }

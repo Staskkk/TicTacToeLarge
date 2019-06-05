@@ -9,8 +9,6 @@ namespace Tic_tac_toe.Services
 {
     public class GameManager
     {
-        public const int FieldSize = 10;
-
         public const int FieldOffset = 5;
 
         public const byte WallMark = 0;
@@ -21,7 +19,7 @@ namespace Tic_tac_toe.Services
 
         public const byte ComputerMark = 3;
 
-        private RootState currentState = new RootState();
+        private RootState currentState;
 
         private byte playerStartedMark;
 
@@ -46,6 +44,8 @@ namespace Tic_tac_toe.Services
 
         public bool PlayerTurn { get; private set; }
 
+        public int FieldSize { get; private set; }
+
         public int GlobalDepth { get; private set; } = 2;
 
         public RootState CurrentState
@@ -62,7 +62,7 @@ namespace Tic_tac_toe.Services
             }
         }
 
-        public void Start(int depth, bool playerTurn)
+        public void Start(int depth, bool playerTurn, int fieldSize)
         {
             if (this.GameStarted)
             {
@@ -71,6 +71,8 @@ namespace Tic_tac_toe.Services
 
             this.GlobalDepth = depth;
             this.PlayerTurn = playerTurn;
+            this.FieldSize = fieldSize;
+            this.CurrentState = new RootState(fieldSize);
             this.playerStartedMark = playerTurn ? PlayerMark : ComputerMark;
             this.GameStarted = true;
         }
@@ -82,14 +84,14 @@ namespace Tic_tac_toe.Services
                 return;
             }
 
-            this.CurrentState.SetEmpty();
+            this.CurrentState.SetEmpty(this.FieldSize);
             this.StateChanged?.Invoke(this, this.currentState);
             this.GameStarted = false;
         }
 
         public void PlayerMakeMove(Move move)
         {
-            if (!this.GameStarted || !this.PlayerTurn)
+            if (!this.GameStarted || !this.PlayerTurn || move == null || this.CurrentState[move.I, move.J] != EmptyMark)
             {
                 return;
             }
@@ -115,7 +117,7 @@ namespace Tic_tac_toe.Services
             }
 
             Move move = this.GetBestMove(GameManager.ComputerMark, GameManager.PlayerMark, this.GlobalDepth);
-            if (move.I == -1 || move.J == -1)
+            if (move == null)
             {
                 this.GameOver?.Invoke(this, "GAME OVER: DRAW!");
                 this.Finish();
@@ -163,9 +165,9 @@ namespace Tic_tac_toe.Services
 
         private bool IsAllOccupied()
         {
-            for (int i = 0; i < FieldSize; ++i)
+            for (int i = 0; i < this.FieldSize; ++i)
             {
-                for (int j = 0; j < FieldSize; ++j)
+                for (int j = 0; j < this.FieldSize; ++j)
                 {
                     if (this.currentState[i, j] == EmptyMark)
                     {
@@ -208,9 +210,9 @@ namespace Tic_tac_toe.Services
         private HashSet<IState> GetAllNextStates(IState prevState, byte goodMark)
         {
             HashSet<IState> res = new HashSet<IState>();
-            for (int i = 0; i < FieldSize; ++i)
+            for (int i = 0; i < this.FieldSize; ++i)
             {
-                for (int j = 0; j < FieldSize; ++j)
+                for (int j = 0; j < this.FieldSize; ++j)
                 {
                     if (this.currentState[i, j] == EmptyMark)
                     {
@@ -251,14 +253,14 @@ namespace Tic_tac_toe.Services
                 }
             }
 
-            if (res.Count == 0 && this.currentState[FieldSize / 2, FieldSize / 2] == EmptyMark)
+            if (res.Count == 0 && this.currentState[this.FieldSize / 2, this.FieldSize / 2] == EmptyMark)
             {
                 var newState = new State()
                 {
                     Move = new Move
                     {
-                        I = FieldSize / 2,
-                        J = FieldSize / 2,
+                        I = this.FieldSize / 2,
+                        J = this.FieldSize / 2,
                         MoveMark = goodMark
                     },
                     Depth = prevState.Depth + 1,
@@ -325,18 +327,19 @@ namespace Tic_tac_toe.Services
                         foreach (var nextLayerState in currLayerState.NextStates)
                         {
                             this.currentState[nextLayerState.Move.I, nextLayerState.Move.J] = nextLayerState.Move.MoveMark;
-                            nextLayerState.HeurValue = nextLayerState.HeurValue ?? this.Heuristic(currDepth + 1, goodMark, badMark);
+
+                            nextLayerState.HeurValue = nextLayerState.HeurValue ?? this.Heuristic(nextLayerState.Move.MoveMark, goodMark, badMark);
                             this.currentState[nextLayerState.Move.I, nextLayerState.Move.J] = EmptyMark;
 
                             if (IsMinMaxFound(currDepth + 1, nextLayerState.HeurValue.Value, currLayerState.HeurValue))
                             {
                                 currLayerState.HeurValue = nextLayerState.HeurValue;
 
-                                if (IsBranchCut(currDepth, currLayerState.HeurValue.Value, currLayerHeurValue))
-                                {
-                                    currLayerState.Prev.NextStates.Remove(currLayerState);
-                                    break;
-                                }
+                                ////if (IsBranchCut(currDepth, currLayerState.HeurValue.Value, currLayerHeurValue))
+                                ////{
+                                ////    currLayerState.Prev.NextStates.Remove(currLayerState);
+                                ////    break;
+                                ////}
                             }
                         }
 
@@ -347,7 +350,7 @@ namespace Tic_tac_toe.Services
                     }
                     else
                     {
-                        currLayerState.HeurValue = this.Heuristic(currDepth, goodMark, badMark);
+                        currLayerState.HeurValue = this.Heuristic(currLayerState.Move.MoveMark, goodMark, badMark);
                         if (IsMinMaxFound(currDepth, currLayerState.HeurValue.Value, currLayerHeurValue))
                         {
                             currLayerHeurValue = currLayerState.HeurValue;
@@ -379,10 +382,10 @@ namespace Tic_tac_toe.Services
 
         private bool IsGoodWin(byte goodMark)
         {
-            for (int i = 0; i < FieldSize; ++i)
+            for (int i = 0; i < this.FieldSize; ++i)
             {
                 int sum = 0;
-                for (int j = 0; j < FieldSize - 1; ++j)
+                for (int j = 0; j < this.FieldSize - 1; ++j)
                 {
                     if (this.currentState[i, j] == goodMark && this.currentState[i, j] == this.currentState[i, j + 1])
                     {
@@ -399,10 +402,10 @@ namespace Tic_tac_toe.Services
                 }
             }
 
-            for (int j = 0; j < FieldSize; ++j)
+            for (int j = 0; j < this.FieldSize; ++j)
             {
                 int sum = 0;
-                for (int i = 0; i < FieldSize - 1; ++i)
+                for (int i = 0; i < this.FieldSize - 1; ++i)
                 {
                     if (this.currentState[i, j] == goodMark && this.currentState[i, j] == this.currentState[i + 1, j])
                     {
@@ -419,12 +422,12 @@ namespace Tic_tac_toe.Services
                 }
             }
 
-            for (int i = 0; i < FieldSize - 4; ++i)
+            for (int i = 0; i < this.FieldSize - 4; ++i)
             {
                 int sum1 = 0;
                 int sum2 = 0;
                 int localI = i;
-                for (int j = 0; j < FieldSize - i - 1; ++j)
+                for (int j = 0; j < this.FieldSize - i - 1; ++j)
                 {
                     if (this.currentState[localI, j] == goodMark && this.currentState[localI, j] == this.currentState[localI + 1, j + 1])
                     {
@@ -456,7 +459,7 @@ namespace Tic_tac_toe.Services
                 }
             }
 
-            for (int i = 4; i < FieldSize; ++i)
+            for (int i = 4; i < this.FieldSize; ++i)
             {
                 int sum1 = 0;
                 int sum2 = 0;
@@ -476,8 +479,8 @@ namespace Tic_tac_toe.Services
                         sum1 = 0;
                     }
 
-                    if (this.currentState[FieldSize - j - 1, FieldSize - localI - 1] == goodMark
-                        && this.currentState[FieldSize - j - 1, FieldSize - localI - 1] == this.currentState[FieldSize - j - 2, FieldSize - localI])
+                    if (this.currentState[this.FieldSize - j - 1, this.FieldSize - localI - 1] == goodMark
+                        && this.currentState[this.FieldSize - j - 1, this.FieldSize - localI - 1] == this.currentState[this.FieldSize - j - 2, this.FieldSize - localI])
                     {
                         sum2++;
                         if (sum2 == 4)
@@ -499,18 +502,18 @@ namespace Tic_tac_toe.Services
 
         #region Heuristic
 
-        private long Heuristic(int depth, byte goodMark, byte badMark)
+        private long Heuristic(byte lastMoveMark, byte goodMark, byte badMark)
         {
             long globalSum = 0;
             long globalRes1 = 0;
             long globalRes2 = 0;
-            for (int i = 0; i < FieldSize; ++i)
+            for (int i = 0; i < this.FieldSize; ++i)
             {
-                for (int j = 0; j < FieldSize; ++j)
+                for (int j = 0; j < this.FieldSize; ++j)
                 {
                     if (this.currentState[i, j] == goodMark)
                     {
-                        var singleHeuristic = this.SingleHeuristic(depth, i, j, goodMark);
+                        var singleHeuristic = this.SingleHeuristic(lastMoveMark, i, j, goodMark);
                         if (singleHeuristic >= long.MaxValue / 10000 && globalRes1 < singleHeuristic)
                         {
                             globalRes1 = singleHeuristic;
@@ -520,7 +523,7 @@ namespace Tic_tac_toe.Services
                     }
                     else if (this.currentState[i, j] == badMark)
                     {
-                        var singleHeuristic = this.SingleHeuristic(depth, i, j, badMark);
+                        var singleHeuristic = this.SingleHeuristic(lastMoveMark, i, j, badMark);
                         if (singleHeuristic >= long.MaxValue / 10000 && globalRes2 < singleHeuristic)
                         {
                             globalRes2 = singleHeuristic;
@@ -533,7 +536,7 @@ namespace Tic_tac_toe.Services
 
             if (globalRes1 > 0 && globalRes2 > 0)
             {
-                if (this.IsHaveAdvantage(depth, goodMark))
+                if (this.IsHaveAdvantage(lastMoveMark, goodMark))
                 {
                     globalSum = globalRes1;
                 }
@@ -557,7 +560,7 @@ namespace Tic_tac_toe.Services
             return globalSum;
         }
 
-        private long SingleHeuristic(int depth, int i0, int j0, byte goodMark)
+        private long SingleHeuristic(byte lastMoveMark, int i0, int j0, byte goodMark)
         {
             long[] sums = new long[4] { 1, 1, 1, 1 };
             long[] lens = new long[4] { 1, 1, 1, 1 };
@@ -587,13 +590,19 @@ namespace Tic_tac_toe.Services
             int sumMore3Count = 0;
             for (int i = 0; i < sums.Length; ++i)
             {   
-                globalSum += this.GetWeightedSum(depth, goodMark, lens[i], sums[i], gaps[i], ends[i * 2], ends[(i * 2) + 1], ref sumMore3Count);
+                var weightedSum = this.GetWeightedSum(lastMoveMark, goodMark, lens[i], sums[i], gaps[i], ends[i * 2], ends[(i * 2) + 1], ref sumMore3Count);
+                if (weightedSum >= long.MaxValue / 10000)
+                {
+                    return weightedSum;
+                }
+
+                globalSum += weightedSum;
             }
 
             return globalSum;
         }
 
-        private long GetWeightedSum(int depth, byte goodMark, long len, long sum, bool gap, RowOpenClose end1, RowOpenClose end2, ref int sumMore3Count)
+        private long GetWeightedSum(byte lastMoveMark, byte goodMark, long len, long sum, bool gap, RowOpenClose end1, RowOpenClose end2, ref int sumMore3Count)
         {
             if (len < 5)
             {
@@ -610,12 +619,12 @@ namespace Tic_tac_toe.Services
                 return (long.MaxValue / 10000) + 3;
             }
 
-            if (this.IsHaveAdvantage(depth, goodMark) && sum == 4 && (end1 == RowOpenClose.Open || end2 == RowOpenClose.Open))
+            if (this.IsHaveAdvantage(lastMoveMark, goodMark) && sum == 4 && (end1 == RowOpenClose.Open || end2 == RowOpenClose.Open))
             {
                 return (long.MaxValue / 10000) + 2;
             }
 
-            if (this.IsHaveAdvantage(depth, goodMark) && sum == 3 && (end1 == RowOpenClose.Open && end2 == RowOpenClose.Open))
+            if (this.IsHaveAdvantage(lastMoveMark, goodMark) && sum == 3 && (end1 == RowOpenClose.Open && end2 == RowOpenClose.Open))
             {
                 return (long.MaxValue / 10000) + 1;
             }
@@ -625,7 +634,7 @@ namespace Tic_tac_toe.Services
                 return (long.MaxValue / 10000) + 2;
             }
 
-            if (sum >= 3 && end1 == RowOpenClose.Open && end2 == RowOpenClose.Open)
+            if (!gap && sum >= 3 && end1 == RowOpenClose.Open && end2 == RowOpenClose.Open)
             {
                 sumMore3Count++;
                 if (sumMore3Count >= 2)
@@ -648,7 +657,7 @@ namespace Tic_tac_toe.Services
                 weightedSum *= 100;
             }
 
-            if (this.IsHaveAdvantage(depth, goodMark))
+            if (this.IsHaveAdvantage(lastMoveMark, goodMark))
             {
                 weightedSum *= 1000;
             }
@@ -656,9 +665,9 @@ namespace Tic_tac_toe.Services
             return weightedSum;
         }
 
-        private bool IsHaveAdvantage(int depth, int goodMark)
+        private bool IsHaveAdvantage(byte lastMoveMark, int goodMark)
         {
-            return (this.playerStartedMark == goodMark && depth % 2 != 0) || (this.playerStartedMark != goodMark && depth % 2 == 0);
+            return lastMoveMark != goodMark;
         }
 
         private void CheckCellInRow(int goodMark, int i, int j, int sumI, int endI, long[] lens, long[] sums, RowOpenClose[] ends, bool[] gaps)
