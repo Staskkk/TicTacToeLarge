@@ -325,7 +325,7 @@ namespace Tic_tac_toe.Services
                         foreach (var nextLayerState in currLayerState.NextStates)
                         {
                             this.currentState[nextLayerState.Move.I, nextLayerState.Move.J] = nextLayerState.Move.MoveMark;
-                            nextLayerState.HeurValue = nextLayerState.HeurValue ?? this.Heuristic(goodMark, badMark);
+                            nextLayerState.HeurValue = nextLayerState.HeurValue ?? this.Heuristic(currDepth + 1, goodMark, badMark);
                             this.currentState[nextLayerState.Move.I, nextLayerState.Move.J] = EmptyMark;
 
                             if (IsMinMaxFound(currDepth + 1, nextLayerState.HeurValue.Value, currLayerState.HeurValue))
@@ -347,7 +347,7 @@ namespace Tic_tac_toe.Services
                     }
                     else
                     {
-                        currLayerState.HeurValue = this.Heuristic(goodMark, badMark);
+                        currLayerState.HeurValue = this.Heuristic(currDepth, goodMark, badMark);
                         if (IsMinMaxFound(currDepth, currLayerState.HeurValue.Value, currLayerHeurValue))
                         {
                             currLayerHeurValue = currLayerState.HeurValue;
@@ -499,24 +499,56 @@ namespace Tic_tac_toe.Services
 
         #region Heuristic
 
-        private long Heuristic(byte goodMark, byte badMark)
+        private long Heuristic(int depth, byte goodMark, byte badMark)
         {
             long globalSum = 0;
+            long globalRes1 = 0;
+            long globalRes2 = 0;
             for (int i = 0; i < FieldSize; ++i)
             {
                 for (int j = 0; j < FieldSize; ++j)
                 {
                     if (this.currentState[i, j] == goodMark)
                     {
-                        var singleHeuristic = this.SingleHeuristic(i, j, goodMark);
+                        var singleHeuristic = this.SingleHeuristic(depth, i, j, goodMark);
+                        if (singleHeuristic >= long.MaxValue / 10000 && globalRes1 < singleHeuristic)
+                        {
+                            globalRes1 = singleHeuristic;
+                        }
+
                         globalSum += singleHeuristic;
                     }
                     else if (this.currentState[i, j] == badMark)
                     {
-                        var singleHeuristic = this.SingleHeuristic(i, j, badMark);
+                        var singleHeuristic = this.SingleHeuristic(depth, i, j, badMark);
+                        if (singleHeuristic >= long.MaxValue / 10000 && globalRes2 < singleHeuristic)
+                        {
+                            globalRes2 = singleHeuristic;
+                        }
+
                         globalSum -= singleHeuristic;
                     }
                 }
+            }
+
+            if (globalRes1 > 0 && globalRes2 > 0)
+            {
+                if (this.IsHaveAdvantage(depth, goodMark))
+                {
+                    globalSum = globalRes1;
+                }
+                else
+                {
+                    globalSum = -globalRes2;
+                }
+            }
+            else if (globalRes1 > 0)
+            {
+                globalSum = globalRes1;
+            }
+            else if (globalRes2 > 0)
+            {
+                globalSum = -globalRes2;
             }
 
             ////this.currentState.DisplayHeurValue = globalSum;
@@ -525,38 +557,83 @@ namespace Tic_tac_toe.Services
             return globalSum;
         }
 
-        private long SingleHeuristic(int i0, int j0, byte goodMark)
+        private long SingleHeuristic(int depth, int i0, int j0, byte goodMark)
         {
             long[] sums = new long[4] { 1, 1, 1, 1 };
+            long[] lens = new long[4] { 1, 1, 1, 1 };
+            bool[] gaps = new bool[4];
             RowOpenClose[] ends = new RowOpenClose[8];
-            for (int i = 1; i < 6; ++i)
+            for (int i = 1; i <= 5; ++i)
             {
-                this.CheckCellInRow(goodMark, i0 + i, j0, 0, 0, sums, ends);
-                this.CheckCellInRow(goodMark, i0 - i, j0, 0, 1, sums, ends);
-                this.CheckCellInRow(goodMark, i0, j0 + i, 1, 2, sums, ends);
-                this.CheckCellInRow(goodMark, i0, j0 - i, 1, 3, sums, ends);
-                this.CheckCellInRow(goodMark, i0 + i, j0 + i, 2, 4, sums, ends);
-                this.CheckCellInRow(goodMark, i0 - i, j0 - i, 2, 5, sums, ends);
-                this.CheckCellInRow(goodMark, i0 + i, j0 - i, 3, 6, sums, ends);
-                this.CheckCellInRow(goodMark, i0 - i, j0 + i, 3, 7, sums, ends);
+                this.CheckCellInRow(goodMark, i0 + i, j0, 0, 0, lens, sums, ends, gaps);
+                this.CheckCellInRow(goodMark, i0 - i, j0, 0, 1, lens, sums, ends, gaps);
+                this.CheckCellInRow(goodMark, i0, j0 + i, 1, 2, lens, sums, ends, gaps);
+                this.CheckCellInRow(goodMark, i0, j0 - i, 1, 3, lens, sums, ends, gaps);
+                this.CheckCellInRow(goodMark, i0 + i, j0 + i, 2, 4, lens, sums, ends, gaps);
+                this.CheckCellInRow(goodMark, i0 - i, j0 - i, 2, 5, lens, sums, ends, gaps);
+                this.CheckCellInRow(goodMark, i0 + i, j0 - i, 3, 6, lens, sums, ends, gaps);
+                this.CheckCellInRow(goodMark, i0 - i, j0 + i, 3, 7, lens, sums, ends, gaps);
+            }
+
+            for (int i = 0; i < ends.Length; ++i)
+            {
+                if (ends[i] == RowOpenClose.Unknown)
+                {
+                    ends[i] = RowOpenClose.Open;
+                }
             }
 
             long globalSum = 0;
+            int sumMore3Count = 0;
             for (int i = 0; i < sums.Length; ++i)
-            {
-                if (sums[i] >= 5)
-                {
-                    return long.MaxValue / 10000;
-                }
-                
-                globalSum += sums[i] * this.GetWeightedSum(goodMark, sums[i], ends[i * 2], ends[(i * 2) + 1]);
+            {   
+                globalSum += this.GetWeightedSum(depth, goodMark, lens[i], sums[i], gaps[i], ends[i * 2], ends[(i * 2) + 1], ref sumMore3Count);
             }
 
             return globalSum;
         }
 
-        private long GetWeightedSum(byte goodMark, long sum, RowOpenClose end1, RowOpenClose end2)
+        private long GetWeightedSum(int depth, byte goodMark, long len, long sum, bool gap, RowOpenClose end1, RowOpenClose end2, ref int sumMore3Count)
         {
+            if (len < 5)
+            {
+                sum = 0;
+            }
+
+            if (gap)
+            {
+                sum--;
+            }
+
+            if (sum >= 5)
+            {
+                return (long.MaxValue / 10000) + 3;
+            }
+
+            if (this.IsHaveAdvantage(depth, goodMark) && sum == 4 && (end1 == RowOpenClose.Open || end2 == RowOpenClose.Open))
+            {
+                return (long.MaxValue / 10000) + 2;
+            }
+
+            if (this.IsHaveAdvantage(depth, goodMark) && sum == 3 && (end1 == RowOpenClose.Open && end2 == RowOpenClose.Open))
+            {
+                return (long.MaxValue / 10000) + 1;
+            }
+
+            if (sum == 4 && end1 == RowOpenClose.Open && end2 == RowOpenClose.Open)
+            {
+                return (long.MaxValue / 10000) + 2;
+            }
+
+            if (sum >= 3 && end1 == RowOpenClose.Open && end2 == RowOpenClose.Open)
+            {
+                sumMore3Count++;
+                if (sumMore3Count >= 2)
+                {
+                    return (long.MaxValue / 10000) + 1;
+                }
+            }
+
             long weightedSum = sum;
             if (end1 == RowOpenClose.Close && end2 == RowOpenClose.Close)
             {
@@ -571,7 +648,7 @@ namespace Tic_tac_toe.Services
                 weightedSum *= 100;
             }
 
-            if (this.playerStartedMark == goodMark)
+            if (this.IsHaveAdvantage(depth, goodMark))
             {
                 weightedSum *= 1000;
             }
@@ -579,26 +656,41 @@ namespace Tic_tac_toe.Services
             return weightedSum;
         }
 
-        private void CheckCellInRow(int goodMark, int i, int j, int sumI, int endI, long[] sums, RowOpenClose[] ends)
+        private bool IsHaveAdvantage(int depth, int goodMark)
         {
-            if (ends[endI] != RowOpenClose.Unknown)
+            return (this.playerStartedMark == goodMark && depth % 2 != 0) || (this.playerStartedMark != goodMark && depth % 2 == 0);
+        }
+
+        private void CheckCellInRow(int goodMark, int i, int j, int sumI, int endI, long[] lens, long[] sums, RowOpenClose[] ends, bool[] gaps)
+        {
+            if (ends[endI] == RowOpenClose.Close)
             {
                 return;
             }
 
             if (this.currentState[i, j] == goodMark)
             {
+                if (ends[endI] == RowOpenClose.Open)
+                {
+                    gaps[sumI] = true;
+                }
+
                 sums[sumI]++;
+                lens[sumI]++;
             }
             else
             {
-                if (this.currentState[i, j] == GameManager.EmptyMark)
+                if (this.currentState[i, j] != GameManager.EmptyMark)
                 {
-                    ends[endI] = RowOpenClose.Open;
+                    if (ends[endI] == RowOpenClose.Unknown)
+                    {
+                        ends[endI] = RowOpenClose.Close;
+                    }
                 }
                 else
                 {
-                    ends[endI] = RowOpenClose.Close;
+                    ends[endI] = RowOpenClose.Open;
+                    lens[sumI]++;
                 }
             }
         }

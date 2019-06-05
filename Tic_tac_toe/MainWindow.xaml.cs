@@ -56,7 +56,7 @@ namespace Tic_tac_toe
             Application.Current.Dispatcher.Invoke(new Action(() =>
             {
                 Cells.State = state;
-                TextBoxHeur.Text = state.DisplayHeurValue.ToString();
+                TextBoxHeur.Text = state.HeurValue.ToString();
             }));
         }
 
