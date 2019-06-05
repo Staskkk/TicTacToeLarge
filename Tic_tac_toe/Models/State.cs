@@ -15,7 +15,7 @@ namespace Tic_tac_toe.Models
 
         public int Depth { get; set; }
 
-        public int? HeurValue { get; set; }
+        public long? HeurValue { get; set; }
 
         public Move Move { get; set; }
 

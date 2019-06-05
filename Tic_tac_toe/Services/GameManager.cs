@@ -141,7 +141,7 @@ namespace Tic_tac_toe.Services
             this.PlayerTurn = true;
         }
 
-        private static bool IsMinMaxFound(int depth, int newVal, int? oldVal)
+        private static bool IsMinMaxFound(int depth, long newVal, long? oldVal)
         {
             if (oldVal == null)
             {
@@ -151,7 +151,7 @@ namespace Tic_tac_toe.Services
             return depth % 2 == 0 ? newVal < oldVal : newVal > oldVal;
         }
 
-        private static bool IsBranchCut(int depth, int newVal, int? oldVal)
+        private static bool IsBranchCut(int depth, long newVal, long? oldVal)
         {
             if (oldVal == null)
             {
@@ -298,7 +298,7 @@ namespace Tic_tac_toe.Services
                 }
 
                 List<IState> currLayerStates = layerStates[currDepth];
-                int? currLayerHeurValue = null;
+                long? currLayerHeurValue = null;
                 foreach (var currLayerState in currLayerStates)
                 {
                     var prevCurrLayerState = currLayerState;
@@ -499,9 +499,9 @@ namespace Tic_tac_toe.Services
 
         #region Heuristic
 
-        private int Heuristic(byte goodMark, byte badMark)
+        private long Heuristic(byte goodMark, byte badMark)
         {
-            int globalSum = 0;
+            long globalSum = 0;
             for (int i = 0; i < FieldSize; ++i)
             {
                 for (int j = 0; j < FieldSize; ++j)
@@ -525,9 +525,9 @@ namespace Tic_tac_toe.Services
             return globalSum;
         }
 
-        private int SingleHeuristic(int i0, int j0, byte goodMark)
+        private long SingleHeuristic(int i0, int j0, byte goodMark)
         {
-            int[] sums = new int[4] { 1, 1, 1, 1 };
+            long[] sums = new long[4] { 1, 1, 1, 1 };
             RowOpenClose[] ends = new RowOpenClose[8];
             for (int i = 1; i < 6; ++i)
             {
@@ -541,12 +541,12 @@ namespace Tic_tac_toe.Services
                 this.CheckCellInRow(goodMark, i0 - i, j0 + i, 3, 7, sums, ends);
             }
 
-            int globalSum = 0;
+            long globalSum = 0;
             for (int i = 0; i < sums.Length; ++i)
             {
                 if (sums[i] >= 5)
                 {
-                    return int.MaxValue / 1000;
+                    return long.MaxValue / 10000;
                 }
                 
                 globalSum += sums[i] * this.GetWeightedSum(goodMark, sums[i], ends[i * 2], ends[(i * 2) + 1]);
@@ -555,9 +555,9 @@ namespace Tic_tac_toe.Services
             return globalSum;
         }
 
-        private int GetWeightedSum(byte goodMark, int sum, RowOpenClose end1, RowOpenClose end2)
+        private long GetWeightedSum(byte goodMark, long sum, RowOpenClose end1, RowOpenClose end2)
         {
-            int weightedSum = sum;
+            long weightedSum = sum;
             if (end1 == RowOpenClose.Close && end2 == RowOpenClose.Close)
             {
                 weightedSum *= 1;
@@ -579,7 +579,7 @@ namespace Tic_tac_toe.Services
             return weightedSum;
         }
 
-        private void CheckCellInRow(int goodMark, int i, int j, int sumI, int endI, int[] sums, RowOpenClose[] ends)
+        private void CheckCellInRow(int goodMark, int i, int j, int sumI, int endI, long[] sums, RowOpenClose[] ends)
         {
             if (ends[endI] != RowOpenClose.Unknown)
             {
