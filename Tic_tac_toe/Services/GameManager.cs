@@ -564,7 +564,7 @@ namespace Tic_tac_toe.Services
         {
             long[] sums = new long[4] { 1, 1, 1, 1 };
             long[] lens = new long[4] { 1, 1, 1, 1 };
-            bool[] gaps = new bool[4];
+            long[] gaps = new long[4];
             RowOpenClose[] ends = new RowOpenClose[8];
             for (int i = 1; i <= 5; ++i)
             {
@@ -602,16 +602,21 @@ namespace Tic_tac_toe.Services
             return globalSum;
         }
 
-        private long GetWeightedSum(byte lastMoveMark, byte goodMark, long len, long sum, bool gap, RowOpenClose end1, RowOpenClose end2, ref int sumMore3Count)
+        private long GetWeightedSum(byte lastMoveMark, byte goodMark, long len, long sum, long gap, RowOpenClose end1, RowOpenClose end2, ref int sumMore3Count)
         {
             if (len < 5)
             {
                 sum = 0;
             }
 
-            if (gap)
+            if (gap == 1)
             {
                 sum--;
+            }
+
+            if (gap > 1)
+            {
+                sum = 1;
             }
 
             if (sum >= 5)
@@ -634,7 +639,7 @@ namespace Tic_tac_toe.Services
                 return (long.MaxValue / 10000) + 2;
             }
 
-            if (!gap && sum >= 3 && end1 == RowOpenClose.Open && end2 == RowOpenClose.Open)
+            if (sum >= 3 && end1 == RowOpenClose.Open && end2 == RowOpenClose.Open)
             {
                 sumMore3Count++;
                 if (sumMore3Count >= 2)
@@ -670,7 +675,7 @@ namespace Tic_tac_toe.Services
             return lastMoveMark != goodMark;
         }
 
-        private void CheckCellInRow(int goodMark, int i, int j, int sumI, int endI, long[] lens, long[] sums, RowOpenClose[] ends, bool[] gaps)
+        private void CheckCellInRow(int goodMark, int i, int j, int sumI, int endI, long[] lens, long[] sums, RowOpenClose[] ends, long[] gaps)
         {
             if (ends[endI] == RowOpenClose.Close)
             {
@@ -681,7 +686,7 @@ namespace Tic_tac_toe.Services
             {
                 if (ends[endI] == RowOpenClose.Open)
                 {
-                    gaps[sumI] = true;
+                    gaps[sumI]++;
                 }
 
                 sums[sumI]++;
