@@ -24,5 +24,6 @@
         <Label Content="Heuristic:" HorizontalAlignment="Left" Margin="17,237,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="TextBoxFieldSize" Text="20" HorizontalAlignment="Left" Height="30" Margin="101,29,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="232" TextChanged="TextBoxFieldSize_TextChanged"/>
         <Label Content="Field size:" HorizontalAlignment="Left" Margin="10,25,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="LabelThinking" Content="Thinking..." Visibility="Hidden" HorizontalAlignment="Left" Margin="28,276,0,0" VerticalAlignment="Top"/>
     </Grid>
 </Window>

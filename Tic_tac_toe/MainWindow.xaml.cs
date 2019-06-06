@@ -45,10 +45,12 @@ namespace Tic_tac_toe
                 await this.Start();
             }
 
+            LabelThinking.Visibility = Visibility.Visible;
             await Task.Run(() =>
             {
                 this.gameManager.PlayerMakeMove(move);
             });
+            LabelThinking.Visibility = Visibility.Hidden;
         }
 
         private void GameManager_StateChanged(object sender, RootState state)
@@ -74,26 +76,32 @@ namespace Tic_tac_toe
 
         private async Task Start()
         {
-            TextBoxDepth.IsEnabled = false;
-            TextBoxFieldSize.IsEnabled = false;
-            ButtonStart.IsEnabled = false;
-            RadioPlayerFirst.IsEnabled = false;
-            RadioComputerFirst.IsEnabled = false;
-            RadioPlayerO.IsEnabled = false;
-            RadioPlayerX.IsEnabled = false;
-            ButtonStop.IsEnabled = true;
-
-            Cells.PlayerSymbol = RadioPlayerX.IsChecked.Value ? "X" : "O";
-            Cells.ComputerSymbol = RadioPlayerO.IsChecked.Value ? "X" : "O";
-
-            int depth = Convert.ToInt32(TextBoxDepth.Text);
-            bool isPlayerFirst = RadioPlayerFirst.IsChecked.Value;
-            int fieldSize = Convert.ToInt32(TextBoxFieldSize.Text);
-            await Task.Run(() =>
+            try
             {
-                this.gameManager.Start(depth, isPlayerFirst, fieldSize);
-                this.gameManager.ComputerMakeMove();
-            });
+                int depth = Convert.ToInt32(TextBoxDepth.Text);
+                bool isPlayerFirst = RadioPlayerFirst.IsChecked.Value;
+                int fieldSize = Convert.ToInt32(TextBoxFieldSize.Text);
+                TextBoxDepth.IsEnabled = false;
+                TextBoxFieldSize.IsEnabled = false;
+                ButtonStart.IsEnabled = false;
+                RadioPlayerFirst.IsEnabled = false;
+                RadioComputerFirst.IsEnabled = false;
+                RadioPlayerO.IsEnabled = false;
+                RadioPlayerX.IsEnabled = false;
+                ButtonStop.IsEnabled = true;
+
+                Cells.PlayerSymbol = RadioPlayerX.IsChecked.Value ? "X" : "O";
+                Cells.ComputerSymbol = RadioPlayerO.IsChecked.Value ? "X" : "O";
+                await Task.Run(() =>
+                {
+                    this.gameManager.Start(depth, isPlayerFirst, fieldSize);
+                    this.gameManager.ComputerMakeMove();
+                });
+            }
+            catch
+            {
+                MessageBox.Show("Invalid input!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void Finish()
@@ -137,7 +145,14 @@ namespace Tic_tac_toe
 
         private void TextBoxFieldSize_TextChanged(object sender, TextChangedEventArgs e)
         {
-            Cells.FieldSize = Convert.ToInt32(TextBoxFieldSize.Text);
+            try
+            {
+                Cells.FieldSize = Convert.ToInt32(TextBoxFieldSize.Text);
+            }
+            catch
+            {
+                MessageBox.Show("Invalid input!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }
